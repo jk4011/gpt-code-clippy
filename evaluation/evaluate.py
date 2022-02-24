@@ -82,30 +82,6 @@ def generate_text(prompt, n, tokenizer, model, include_prompt=True):
 
 #     eval_and_save_problems(apps_ds, out_path)
 
-def _eval_concode(path):
-    # TODO: format input to model same as App and OpenAI HumanEval datasets are formatted
-    data = load_dataset("json", data_files=str(path / "test.json"))["train"]
-    predictions = [[]]
-    references = []
-    for example in data:
-        output = generate_text(example["nl"])
-        predictions[0].append(output.split(" "))
-        references.append(example["code"].split(" "))
-    results = compute_metrics(predictions, references)
-    print(f"Bleu score for Concode dataset: {results}")
-
-
-def _eval_apps(out_path, tokenizer, model):
-    gpt_codes = {}
-    apps_ds = load_dataset("../data_processing/apps.py")["test"]
-    apps_ds = apps_ds.select(range(5_212))
-    for idx, example in tqdm(enumerate(apps_ds), total=len(apps_ds)):
-        answer = generate_text(example["question"], 5, tokenizer, model)
-        gpt_codes[idx] = answer
-    with open(out_path / "all_codes.json", "w") as f:
-        json.dump(gpt_codes, f)
-
-    eval_and_save_problems(apps_ds, out_path)
 
 def _eval_human_eval(path, out_path, tokenizer, model):
     problems = read_problems(str(path))
@@ -148,6 +124,3 @@ def main(
     ).to("cuda")
 
     _eval_human_eval(human_eval_path, out_path, tokenizer, model)
-
-if __name__ == "__main__":
-    main()
